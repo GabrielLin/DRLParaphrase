@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('model', help='Type of architecture',
                         choices=['lstm', 'mlp'])
     parser.add_argument('--vocab', help='Vocabulary file (only needed if numpy'
-                                        'embedding file is given)')
+                        'embedding file is given)')
     parser.add_argument('-e', dest='num_epochs', default=10, type=int,
                         help='Number of epochs')
     parser.add_argument('-b', dest='batch_size', default=32, help='Batch size',
@@ -35,27 +35,27 @@ if __name__ == '__main__':
     parser.add_argument('-u', dest='num_units', help='Number of hidden units',
                         default=100, type=int)
     parser.add_argument('--no-proj', help='Do not project input embeddings to '
-                                          'the same dimensionality used by '
-                                          'internal networks',
+                        'the same dimensionality used by '
+                        'internal networks',
                         action='store_false', dest='no_project')
     parser.add_argument('-d', dest='dropout', help='Dropout keep probability',
                         default=1.0, type=float)
     parser.add_argument('-c', dest='clip_norm', help='Norm to clip training '
-                                                     'gradients',
+                        'gradients',
                         default=100, type=float)
     parser.add_argument('-r', help='Learning rate', type=float, default=0.001,
                         dest='rate')
     parser.add_argument('--lang', choices=['en', 'pt'], default='en',
                         help='Language (default en; only affects tokenizer)')
     parser.add_argument('--lower', help='Lowercase the corpus (use it if the '
-                                        'embedding model is lowercased)',
+                        'embedding model is lowercased)',
                         action='store_true')
     parser.add_argument('--use-intra', help='Use intra-sentence attention',
                         action='store_true', dest='use_intra')
     parser.add_argument('--l2', help='L2 normalization constant', type=float,
                         default=0.0)
     parser.add_argument('--report', help='Number of batches between '
-                                         'performance reports',
+                        'performance reports',
                         default=100, type=int)
     parser.add_argument('-v', help='Verbose', action='store_true',
                         dest='verbose')

@@ -31,8 +31,8 @@ class SummarizationModel(object):
     def __init__(self, hps, vocab):
         self._hps = hps
         self._vocab = vocab
-        self._training = training 
-        self._devices = devices 
+        self._training = training
+        self._devices = devices
         self.decoding = decoing
         self.ranking = ranking
         self._temp_ratio = temp_ratio
@@ -104,7 +104,7 @@ class SummarizationModel(object):
             cell_fw = tf.contrib.rnn.LSTMCell(self._hps.hidden_dim, initializer=self.rand_unif_init, state_is_tuple=True)
             cell_bw = tf.contrib.rnn.LSTMCell(self._hps.hidden_dim, initializer=self.rand_unif_init, state_is_tuple=True)
             (encoder_outputs, (fw_st, bw_st)) = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw, cell_bw, encoder_inputs, 
+                cell_fw, cell_bw, encoder_inputs,
                 dtype=tf.float32, sequence_length=seq_len, swap_memory=True)
             encoder_outputs = tf.concat(axis=2, values=encoder_outputs) # concatenate the forwards and backwards states
         return encoder_outputs, fw_st, bw_st
@@ -156,10 +156,10 @@ class SummarizationModel(object):
         prev_coverage = self.prev_coverage if hps.mode=="decode" and hps.coverage else None # In decode mode, we run attention_decoder one step at a time and so need to pass in the previous step's coverage vector each time
 
         outputs, out_state, attn_dists, p_gens, coverage = attention_decoder(
-            inputs, self._dec_in_state, self._enc_states, self._enc_padding_mask, cell, 
-            initial_state_attention=(hps.mode=="decode" or self.decoding), 
-            pointer_gen=hps.pointer_gen, 
-            use_coverage=hps.coverage, 
+            inputs, self._dec_in_state, self._enc_states, self._enc_padding_mask, cell,
+            initial_state_attention=(hps.mode=="decode" or self.decoding),
+            pointer_gen=hps.pointer_gen,
+            use_coverage=hps.coverage,
             prev_coverage=prev_coverage)
 
         return outputs, out_state, attn_dists, p_gens, coverage
@@ -369,7 +369,7 @@ class SummarizationModel(object):
         return sess.run(to_return, feed_dict)
 
     def run_train_step_with_reward(
-        self, sess, batch, new_dec, new_target, new_padding, reward, 
+        self, sess, batch, new_dec, new_target, new_padding, reward,
         neg_batch=None):
 
         feed_dict = {}
@@ -402,7 +402,7 @@ class SummarizationModel(object):
         feed_dict[self._dec_batch] = new_dec
         feed_dict[self._target_batch] = new_target
         feed_dict[self._padding_mask] = new_padding
-        feed_dict[self.temp_ratio] = temp_ratio 
+        feed_dict[self.temp_ratio] = temp_ratio
 
         to_return = {
             'train_op': self._train_op,

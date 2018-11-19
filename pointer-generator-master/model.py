@@ -31,8 +31,8 @@ class SummarizationModel(object):
     def __init__(self, hps, vocab):
         self._hps = hps
         self._vocab = vocab
-        self._training = training 
-        self._devices = devices 
+        self._training = training
+        self._devices = devices
         self.decoding = decoing
         self.ranking = ranking
         self._temp_ratio = temp_ratio
@@ -104,7 +104,7 @@ class SummarizationModel(object):
             cell_fw = tf.contrib.rnn.LSTMCell(self._hps.hidden_dim, initializer=self.rand_unif_init, state_is_tuple=True)
             cell_bw = tf.contrib.rnn.LSTMCell(self._hps.hidden_dim, initializer=self.rand_unif_init, state_is_tuple=True)
             (encoder_outputs, (fw_st, bw_st)) = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw, cell_bw, encoder_inputs, 
+                cell_fw, cell_bw, encoder_inputs,
                 dtype=tf.float32, sequence_length=seq_len, swap_memory=True)
             encoder_outputs = tf.concat(axis=2, values=encoder_outputs) # concatenate the forwards and backwards states
         return encoder_outputs, fw_st, bw_st
@@ -156,10 +156,10 @@ class SummarizationModel(object):
         prev_coverage = self.prev_coverage if hps.mode=="decode" and hps.coverage else None # In decode mode, we run attention_decoder one step at a time and so need to pass in the previous step's coverage vector each time
 
         outputs, out_state, attn_dists, p_gens, coverage = attention_decoder(
-            inputs, self._dec_in_state, self._enc_states, self._enc_padding_mask, cell, 
-            initial_state_attention=(hps.mode=="decode" or self.decoding), 
-            pointer_gen=hps.pointer_gen, 
-            use_coverage=hps.coverage, 
+            inputs, self._dec_in_state, self._enc_states, self._enc_padding_mask, cell,
+            initial_state_attention=(hps.mode=="decode" or self.decoding),
+            pointer_gen=hps.pointer_gen,
+            use_coverage=hps.coverage,
             prev_coverage=prev_coverage)
 
         return outputs, out_state, attn_dists, p_gens, coverage
@@ -369,7 +369,7 @@ class SummarizationModel(object):
         return sess.run(to_return, feed_dict)
 
     def run_train_step_with_reward(
-        self, sess, batch, new_dec, new_target, new_padding, reward, 
+        self, sess, batch, new_dec, new_target, new_padding, reward,
         neg_batch=None):
 
         feed_dict = {}
@@ -402,7 +402,7 @@ class SummarizationModel(object):
         feed_dict[self._dec_batch] = new_dec
         feed_dict[self._target_batch] = new_target
         feed_dict[self._padding_mask] = new_padding
-        feed_dict[self.temp_ratio] = temp_ratio 
+        feed_dict[self.temp_ratio] = temp_ratio
 
         to_return = {
             'train_op': self._train_op,
@@ -520,7 +520,7 @@ class SummarizationModel(object):
         results = sess.run(to_return, feed_dict=feed) # run the decoder step
 
         # Convert results['states'] (a single LSTMStateTuple) into a list of LSTMStateTuple -- one for each hypothesis
-        new_states = [tf.contrib.rnn.LSTMStateTuple(results['states'].c[i, :], results['states'].h[i, :]) for i in xrange(beam_size)]
+        new_states = [tf.contrib.rnn.LSTMStateTuple(results['states'].c[i, :], results['states'].h[i, :]) for i in range(beam_size)]
 
         # Convert singleton list containing a tensor to a list of k arrays
         assert len(results['attn_dists'])==1
@@ -531,14 +531,14 @@ class SummarizationModel(object):
             assert len(results['p_gens'])==1
             p_gens = results['p_gens'][0].tolist()
         else:
-            p_gens = [None for _ in xrange(beam_size)]
+            p_gens = [None for _ in range(beam_size)]
 
         # Convert the coverage tensor to a list length k containing the coverage vector for each hypothesis
         if FLAGS.coverage:
             new_coverage = results['coverage'].tolist()
             assert len(new_coverage) == beam_size
         else:
-            new_coverage = [None for _ in xrange(beam_size)]
+            new_coverage = [None for _ in range(beam_size)]
 
         return results['ids'], results['probs'], new_states, attn_dists, p_gens, new_coverage
 

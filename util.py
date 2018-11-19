@@ -20,13 +20,13 @@ import tensorflow as tf
 import time
 import os
 import numpy as np
-from utils import rouge
+# from utils import rouge
 import data
 import nltk
 import edit_distance
 from scipy.stats import rankdata
 FLAGS = tf.app.flags.FLAGS
-import jieba as jb
+# import jieba as jb
 
 def get_config():
     """Returns config for tf.session"""
@@ -65,18 +65,18 @@ def dynamic_padding(list_of_ids, to_len, pad_id):
     padded_ids = [np.array(pad_seq(list(ids))) for ids in list_of_ids]
     return np.array(padded_ids), lens
 
-def cal_rouge_score(tg_ids, out_ids, out_lens, tg_lens, n=1):
-    rslts = []
-    for tg, out, tg_len, out_len in zip(tg_ids, out_ids, tg_lens, out_lens):
-        try:
-            score = rouge.rouge_n(
-                [' '.join([str(x) for x in list(out[ :int(out_len)-1])])],
-                [' '.join([str(x) for x in list(out[ :int(tg_len)-1])])],
-                n=n)[0]
-        except:
-            score = 0
-        rslts.append(score)
-    return np.array(rslts)
+# def cal_rouge_score(tg_ids, out_ids, out_lens, tg_lens, n=1):
+#     rslts = []
+#     for tg, out, tg_len, out_len in zip(tg_ids, out_ids, tg_lens, out_lens):
+#         try:
+#             score = rouge.rouge_n(
+#                 [' '.join([str(x) for x in list(out[ :int(out_len)-1])])],
+#                 [' '.join([str(x) for x in list(out[ :int(tg_len)-1])])],
+#                 n=n)[0]
+#         except:
+#             score = 0
+#         rslts.append(score)
+#     return np.array(rslts)
 
 def prepare_retrain_data(hps, dec_batch, dec_batch_extended_vocab, vocab, lens):
     bs = dec_batch.shape[0]
@@ -107,9 +107,11 @@ def convert_to_full_vocab(id_arr, full_vdict, vocab, art_oovs_list):
 def measure_len(output_ids, vocab):
     len_ = []
     for ids in output_ids:
-        try: 
+        try:
             stop_idx = list(ids).index(vocab.word2id(data.STOP_DECODING))
             len_.append(stop_idx+1)
+        except:
+            print('Nothing')
     return len_
 
 def concat(sent1, sent2, pad_id, axis=0):
@@ -123,17 +125,17 @@ def concat(sent1, sent2, pad_id, axis=0):
 
 
 
-def cal_rouge_l_score(tg_ids, out_ids, out_lens, tg_lens, n=1):
-    rslts = []
-    for tg, out, tg_len, out_len in zip(tg_ids, out_ids, tg_lens, out_lens):
-        try:
-            score = rouge.rouge_l_sentence_level(
-                [' '.join([str(x) for x in list(out[ :int(out_len)-1])])],
-                [' '.join([str(x) for x in list(out[ :int(tg_len)-1])])])[0]
-        except:
-            score = 0
-        rslts.append(score)
-    return np.array(rslts)
+# def cal_rouge_l_score(tg_ids, out_ids, out_lens, tg_lens, n=1):
+#     rslts = []
+#     for tg, out, tg_len, out_len in zip(tg_ids, out_ids, tg_lens, out_lens):
+#         try:
+#             score = rouge.rouge_l_sentence_level(
+#                 [' '.join([str(x) for x in list(out[ :int(out_len)-1])])],
+#                 [' '.join([str(x) for x in list(out[ :int(tg_len)-1])])])[0]
+#         except:
+#             score = 0
+#         rslts.append(score)
+#     return np.array(rslts)
 
 def cal_bleu_score(tg_ids, out_ids, out_lens, tg_lens):
     rslts = []
@@ -170,7 +172,7 @@ def restore_model(sess, saver, file_, var, save=False):
 
     return saver
 
-def rescale_reward(r, base_r, padding, scale=1.):
+def rescale_reward(r, base_r, padding, scale=1.0):
     rank = np.zeros_like(r)
     decode_len = np.sum(padding, axis=1)
 
@@ -185,21 +187,5 @@ def rescale_reward(r, base_r, padding, scale=1.):
 
     tmp = rank.astype(np.float64) / B
     x = scale * (0.5 - (rank.astype(np.float64) / len(r) ))
-    sigmoid = 1. / ( 1 + np.exp(-x*padding)) + np.expand_dims(base_r, axis=1) - 0.5
+    sigmoid = 1.0 / ( 1 + np.exp(-x*padding)) + np.expand_dims(base_r, axis=1) - 0.5
     return 2 * sigmoid - np.expand_dims(base_r, axis=1)
-
-#def rank_sentence(r, scale=1., bias=0.5):
-#    rank = rankdata(-r, 'min')
-#    x = scale * (0)
-
-
-
-
-
-
-
-
-
-
-
-

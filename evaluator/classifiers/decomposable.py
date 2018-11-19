@@ -481,7 +481,7 @@ class DecomposableNLIModel(object):
         """
         return cls(params['num_units'], params['num_classes'],
                    params['vocab_size'], params['embedding_size'],
-                   project_input=params['project_input'], bs=batch_size, 
+                   project_input=params['project_input'], bs=batch_size,
                    training=training)
 
     @classmethod
@@ -544,7 +544,7 @@ class DecomposableNLIModel(object):
                 'vocab_size': vocab_size,
                 'embedding_size': self.embedding_size,
                 'project_input': self.project_input,
-                'train_embed': self.train_embed, 
+                'train_embed': self.train_embed,
                 'use_pe': self.use_pe
                 }
 
@@ -595,12 +595,12 @@ class DecomposableNLIModel(object):
             (nulls, sent1),
             axis=1)
         sent2 = np.concatenate(
-            (nulls, sent2), 
+            (nulls, sent2),
             axis=1)
         sz1 = sz1 + 1
         sz2 = sz2 + 1
         feeds = {
-            self.sentence1: sent1, 
+            self.sentence1: sent1,
             self.sentence2: sent2,
             self.sentence1_size: sz1,
             self.sentence2_size: sz2,
@@ -644,7 +644,7 @@ class DecomposableNLIModel(object):
             self.learning_rate: 0,
             self.dropout_keep: 1,
             self.l2_constant: 0,
-            self.clip_value:0 
+            self.clip_value:0
         }
         eval_logits = session.run(self.eval_logits, feeds)
         logits = np.exp(eval_logits)
@@ -717,7 +717,7 @@ class DecomposableNLIModel(object):
                         valid_batch = valid_dataset.get_batch(valid_idx, valid_idx2)
                         feeds = self._create_batch_feed(valid_batch, 0, 1, l2, 0)
                         rslts = self._run_on_validation(session, feeds)
-                        valid_loss = 
+                        valid_loss =
                     feeds = self._create_batch_feed(valid_dataset,
                                                     0, 1, l2, 0)
 

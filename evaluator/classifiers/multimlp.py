@@ -41,7 +41,7 @@ class MultiFeedForwardClassifier(DecomposableNLIModel):
 
         super(MultiFeedForwardClassifier, self).\
             __init__(num_units, num_classes, vocab_size, embedding_size,
-                     training, project_input, optimizer, train_embed, 
+                     training, project_input, optimizer, train_embed,
                      use_pe=use_pe, ranking=ranking, bs=bs)
 
     def _transformation_input(self, inputs, size, reuse_weights=False, seq_lens=None):
@@ -78,7 +78,7 @@ class MultiFeedForwardClassifier(DecomposableNLIModel):
                    use_intra_attention=params['use_intra'],
                    distance_biases=params['distance_biases'],
                    train_embed=params['train_embed'],
-                   ranking=ranking, optimizer=optimizer, 
+                   ranking=ranking, optimizer=optimizer,
                    bs=batch_size, use_bias=params['use_bias'])
 
     def _get_distance_biases(self, time_steps, reuse_weights=False):

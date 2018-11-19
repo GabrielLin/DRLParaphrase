@@ -71,6 +71,7 @@ tf.app.flags.DEFINE_boolean('restore_best_model', False, 'Restore the best model
 
 # Debugging. See https://www.tensorflow.org/programmers_guide/debugger
 tf.app.flags.DEFINE_boolean('debug', False, "Run in tensorflow's debug mode (watches for NaN/inf values)")
+tf.app.flags.DEFINE_string('gpu', "6", "GPU to use")
 
 
 
@@ -107,22 +108,22 @@ def restore_best_model():
 
     # Initialize all vars in the model
     sess = tf.Session(config=util.get_config())
-    print "Initializing all variables..."
+    print("Initializing all variables...")
     sess.run(tf.initialize_all_variables())
 
     # Restore the best model from eval dir
     saver = tf.train.Saver([v for v in tf.all_variables() if "Adagrad" not in v.name])
-    print "Restoring all non-adagrad variables from best model in eval dir..."
+    print("Restoring all non-adagrad variables from best model in eval dir...")
     curr_ckpt = util.load_ckpt(saver, sess, "eval")
-    print "Restored %s." % curr_ckpt
+    print("Restored %s." % curr_ckpt)
 
     # Save this model to train dir and quit
     new_model_name = curr_ckpt.split("/")[-1].replace("bestmodel", "model")
     new_fname = os.path.join(FLAGS.log_root, "train", new_model_name)
-    print "Saving model to %s..." % (new_fname)
+    print("Saving model to %s..." % (new_fname))
     new_saver = tf.train.Saver() # this saver saves all variables that now exist, including Adagrad variables
     new_saver.save(sess, new_fname)
-    print "Saved."
+    print("Saved.")
     exit()
 
 
@@ -132,24 +133,24 @@ def convert_to_coverage_model():
 
     # initialize an entire coverage model from scratch
     sess = tf.Session(config=util.get_config())
-    print "initializing everything..."
+    print( "initializing everything...")
     sess.run(tf.global_variables_initializer())
 
     # load all non-coverage weights from checkpoint
     saver = tf.train.Saver([v for v in tf.global_variables() if "coverage" not in v.name and "Adagrad" not in v.name])
-    print "restoring non-coverage variables..."
+    print( "restoring non-coverage variables...")
     curr_ckpt = util.load_ckpt(saver, sess)
-    print "restored."
+    print( "restored.")
 
     # save this model and quit
     new_fname = curr_ckpt + '_cov_init'
-    print "saving model to %s..." % (new_fname)
+    print( "saving model to %s..." % (new_fname))
     new_saver = tf.train.Saver() # this one will save all variables that now exist
     new_saver.save(sess, new_fname)
-    print "saved."
+    print( "saved.")
     exit()
 
-def cal_ranker_reward(batch, vocab, rank_word_dict, all_hyp, decoder, ranker, rank_sess, tg_len, 
+def cal_ranker_reward(batch, vocab, rank_word_dict, all_hyp, decoder, ranker, rank_sess, tg_len,
                       given_hyp=None):
     rewards = np.zeros((FLAGS.batch_size, FLAGS.max_dec_steps))
     rank_src = util.convert_to_full_vocab(batch.enc_batch_extend_vocab, rank_word_dict, vocab, batch.art_oovs)
@@ -163,8 +164,8 @@ def cal_ranker_reward(batch, vocab, rank_word_dict, all_hyp, decoder, ranker, ra
             sample_len = np.array(sample_len) - 1
             rank_tg = util.convert_to_full_vocab(sample_out_extend_vocab, rank_word_dict, vocab, batch.art_oovs)
             rewards[:, idx-1] += ranker.eval(rank_sess, rank_src, rank_tg, batch.enc_lens, sample_len)
-    return rewards 
-    
+    return rewards
+
 def setup_training(model, batcher):
     """Does setup before starting training (run_training)"""
     train_dir = os.path.join(FLAGS.log_root, "train")
@@ -208,17 +209,17 @@ def run_training(model, batcher, sess_context_manager, sv, summary_writer):
 
             tf.logging.info('running training step...')
             t0=time.time()
-            results = model.run_train_step(sess, batch, np.ones((FLAGS.batch_size, FLAGS.max_dec_steps)))
+            results = model.run_train_step(sess, batch)# np.ones((FLAGS.batch_size, FLAGS.max_dec_steps)))
             t1=time.time()
             tf.logging.info('seconds for training step: %.3f', t1-t0)
 
             loss = results['loss']
-            tf.logging.info('loss: %f', loss) # print the loss to screen
+            tf.logging.info('loss: %f', loss) # print( the loss to screen
 
             if not np.isfinite(loss):
                 raise Exception("Loss is not finite. Stopping.")
 
-            
+
             summaries = results['summaries'] # we will write these summaries to tensorboard using summary_writer
             train_step = results['global_step'] # we need this to update our running average loss
 
@@ -228,7 +229,8 @@ def run_training(model, batcher, sess_context_manager, sv, summary_writer):
 
 
 def run_eval(model, batcher, vocab):
-    """Repeatedly runs eval iterations, logging to screen and writing summaries. Saves the model with the best loss seen so far."""
+    """Repeatedly runs eval iterations, logging to screen and writing summaries.
+    Saves the model with the best loss seen so far."""
     model.build_graph() # build the graph
     saver = tf.train.Saver(max_to_keep=3) # we will keep 3 best checkpoints at a time
     sess = tf.Session(config=util.get_config())
@@ -248,7 +250,7 @@ def run_eval(model, batcher, vocab):
         t1=time.time()
         tf.logging.info('seconds for batch: %.2f', t1-t0)
 
-        # print the loss and coverage loss to screen
+        # print( the loss and coverage loss to screen
         loss = results['loss']
         tf.logging.info('loss: %f', loss)
         if FLAGS.coverage:
@@ -276,7 +278,7 @@ def run_eval(model, batcher, vocab):
 
 def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_decode, batcher, neg_batcher, vocab):
     train_dir = os.path.join(FLAGS.log_root, 'train')
-    
+
     if not os.path.exists(train_dir):
         os.makedirs(train_dir)
 
@@ -293,14 +295,14 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
             model_dvars = tf.get_collection(tf.GraphKeys.VARIABLES)
 
         with G_t.as_default():
-            model_train.build_grapg()
+            model_train.build_graph()
             model_tvars = tf.get_collection(tf.GraphKeys.VARIABLES)
 
         ranker, rank_sess, _ = MultiFeedForwardClassifier.load(
             FLAGS.rank_log_root, graph=R, batch_size=FLAGS.batch_size)
 
         rank_world_dict, rank_embeddings = ioutils.load_embeddings(
-            FLAGS.rank_embed_size, FLAGS.rank_vocab_file, 
+            FLAGS.rank_embed_size, FLAGS.rank_vocab_file,
             generate=False, load_extrac_from=FLAGS.rank_log_root, normalize=True)
 
         ranker.initialize_embeddings(rank_sess, rank_embeddings)
@@ -311,11 +313,9 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
 
     decode_sess = tf.Session(config=config, graph=G_d)
     train_sess = tf.Session(config=config, graph=G_t)
-    train_saver = util.restore_model(
-        train_sess, train_saver, model_ckpt_state.model_checkpoint_path, model_tvars, save=True)
+    train_saver = util.restore_model(train_sess, train_saver, model_ckpt_state.model_checkpoint_path, model_tvars, save=True)
 
-    decode_saver = util.restore_model(
-        decode_sess, decode_saver, model_ckpt_state.model_checkpoint_path, model_dvars)
+    decode_saver = util.restore_model(decode_sess, decode_saver, model_ckpt_state.model_checkpoint_path, model_dvars)
 
     decoder = BeamSearchDecoder(model_decode, None, vocab, sess=decode_sess)
 
@@ -335,14 +335,14 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
             batch, sampling=FLAGS.sampling, preserve_hyp=True, temp_ratio=FLAGS.temp_ratio)
         neg_gen_out, neg_gen_out_extended_vocab, neg_all_hyp = decoder.sample_batch_wise(
             neg_batch, sampling=FLAGS.sampling, preserve_hyp=True, temp_ratio=FLAGS.temp_ratio)
-        
+
         assert len(pos_gen_out) == hps.batch_size
 
         pos_decode_len = util.measure_len(pos_gen_out, vocab)
         neg_decode_len = util.measure_len(neg_gen_out, vocab)
 
         rank_src = util.convert_to_full_vocab(batch.enc_batch_extend_vocab, rank_word_dict, vocab, batch.art_oovs)
-        rank_tg = util.convert_to_full_vocab(pos_gen_out_extended_vocabm rank_word_dict, vocab, batch.art_oovs)
+        rank_tg = util.convert_to_full_vocab(pos_gen_out_extended_vocab, rank_word_dict, vocab, batch.art_oovs)
         pos_sent_reward = ranker.eval(rank_sess, rank_src, rank_tg, batch.enc_lens, np.array(pos_decode_len)-1)
 
         rank_src = util.convert_to_full_vocab(
@@ -362,11 +362,11 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
 
         msk = np.zeros_like(decode_reward)
         decode_len = np.concatenate((pos_decode_len, neg_decode_len), axis=0)
-        
+
         for b, l in enumerate(decode_len):
             msk[b, :l] = 1
 
-        rewards = decode_reward * msk / FLAGS.num_mc 
+        rewards = decode_reward * msk / FLAGS.num_mc
 
         sent_reward = util.rank_sentence(sent_reward, scale=FLAGS.sent_scale)
         rewards = util.rescale_reward(rewards, sent_reward, msk, scale=FLAGS.token_scale)
@@ -382,17 +382,17 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
         target = np.concatenate((target, target, neg_target), axis=0)
         padding = np.concatenate((padding, padding, neg_padding), axis=0)
         rewards = np.concatenate((
-            rewards[:FLAGS.batch_size], 
-            np.ones(FLAGS.batch_size), 
+            rewards[:FLAGS.batch_size],
+            np.ones(FLAGS.batch_size),
             rewards[FLAGS.batch_size:]
             ))
         rslts = model_train.run_train_step_with_reward(
-            train_sess, batch, dec_inp, target, padding, rewards, 
+            train_sess, batch, dec_inp, target, padding, rewards,
             neg_batch=neg_batch, temp_ratio=FLAGS.temp_ratio)
 
         train_step = rslts['global_step']
         train_saver.save(
-            train_sess, 
+            train_sess,
             os.path.join(train_dir, 'model.ckpt'),
             global_step=train_step
             )
@@ -428,7 +428,8 @@ def run_training_reinforce(hps, retrain_model_hps, eval_hps, model_train, model_
                 gen_out, gen_out_extended_vocab = decoder.sample_batch_wise
 
 def main(unused_argv):
-    if len(unused_argv) != 1: # prints a message if you've entered flags incorrectly
+    os.environ['CUDA_VISIBLE_DEVICES'] = FLAGS.gpu
+    if len(unused_argv) != 1: # print(s a message if you've entered flags incorrectly
         raise Exception("Problem with flags: %s" % unused_argv)
 
     tf.logging.set_verbosity(tf.logging.INFO) # choose what level of logging you want
@@ -457,10 +458,12 @@ def main(unused_argv):
     # Make a namedtuple hps, containing the values of the hyperparameters that the model needs
     hparam_list = ['mode', 'lr', 'adagrad_init_acc', 'rand_unif_init_mag', 'trunc_norm_init_std', 'max_grad_norm', 'hidden_dim', 'emb_dim', 'batch_size', 'max_dec_steps', 'max_enc_steps', 'coverage', 'cov_loss_wt', 'pointer_gen']
     hps_dict = {}
-    for key,val in FLAGS.__flags.iteritems(): # for each flag
+    for key,val in FLAGS.flag_values_dict().items(): # for each flag
         if key in hparam_list: # if it's in the list
             hps_dict[key] = val # add it to the dict
     hps = namedtuple("HParams", hps_dict.keys())(**hps_dict)
+    print(hps.mode)
+    print(hps.batch_size)
 
     # Create a batcher object that will create minibatches of data
     batcher = Batcher(FLAGS.data_path, vocab, hps, single_pass=FLAGS.single_pass)
@@ -468,7 +471,7 @@ def main(unused_argv):
     tf.set_random_seed(111) # a seed value for randomness
 
     if hps.mode == 'train':
-        print "creating model..."
+        print( "creating model...")
         model = SummarizationModel(hps, vocab)
         setup_training(model, batcher)
     elif hps.mode == 'eval':
