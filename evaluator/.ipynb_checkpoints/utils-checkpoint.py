@@ -83,8 +83,8 @@ def get_tokenizer(language):
     language = language.lower()
     if language == 'en':
         tokenize = tokenize_english
-    # elif language == 'pt':
-    #     tokenize = tokenize_portuguese
+    elif language == 'pt':
+        tokenize = tokenize_portuguese
     else:
         ValueError('Unsupported language: %s' % language)
 
@@ -100,31 +100,30 @@ def tokenize_english(text):
     return tokenizer.tokenize(text)
 
 
-# def tokenize_portuguese(text):
-#     """
-#     Tokenize the given sentence in Portuguese. The tokenization is done in
-#     conformity  with Universal Treebanks (at least it attempts so).
+def tokenize_portuguese(text):
+    """
+    Tokenize the given sentence in Portuguese. The tokenization is done in
+    conformity  with Universal Treebanks (at least it attempts so).
 
-#     :param text: text to be tokenized, as a string
-#     """
-#     tokenizer_regexp = ur'''(?ux)
-#     # the order of the patterns is important!!
-#     # more structured patterns come first
-#     [a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|    # emails
-#     (?:[\#@]\w+)|                     # Hashtags and twitter user names
-#     (?:[^\W\d_]\.)+|                  # one letter abbreviations, e.g. E.U.A.
-#     (?:[DSds][Rr][Aa]?)\.|            # common abbreviations such as dr., sr., sra., dra.
-#     \b\d+(?:[-:.,]\w+)*(?:[.,]\d+)?\b|
-#         # numbers in format 999.999.999,999, or hyphens to alphanumerics
-#     \.{3,}|                           # ellipsis or sequences of dots
-#     (?:\w+(?:\.\w+|-\d+)*)|           # words with dots and numbers, possibly followed by hyphen number
-#     -+|                               # any sequence of dashes
-#     \S                                # any non-space character 
-#     '''
+    :param text: text to be tokenized, as a string
+    """
+    tokenizer_regexp = ur'''(?ux)
+    # the order of the patterns is important!!
+    # more structured patterns come first
+    [a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+|    # emails
+    (?:[\#@]\w+)|                     # Hashtags and twitter user names
+    (?:[^\W\d_]\.)+|                  # one letter abbreviations, e.g. E.U.A.
+    (?:[DSds][Rr][Aa]?)\.|            # common abbreviations such as dr., sr., sra., dra.
+    \b\d+(?:[-:.,]\w+)*(?:[.,]\d+)?\b|
+        # numbers in format 999.999.999,999, or hyphens to alphanumerics
+    \.{3,}|                           # ellipsis or sequences of dots
+    (?:\w+(?:\.\w+|-\d+)*)|           # words with dots and numbers, possibly followed by hyphen number
+    -+|                               # any sequence of dashes
+    \S                                # any non-space character
+    '''
+    tokenizer = RegexpTokenizer(tokenizer_regexp)
 
-#     tokenizer = RegexpTokenizer(tokenizer_regexp)
-
-#     return tokenizer.tokenize(text)
+    return tokenizer.tokenize(text)
 
 
 def tokenize_corpus(pairs):

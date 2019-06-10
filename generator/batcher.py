@@ -293,7 +293,7 @@ class Batcher(object):
 
         while True:
             try:
-                (article, abstract) = next(input_gen) # read the next example from file. article and abstract are both strings.
+                (q1, q2) = next(input_gen) # read the next example from file. article and abstract are both strings.
             except StopIteration: # if there are no more examples:
                 tf.logging.info("The example generator for this example queue filling thread has exhausted data.")
                 if self._single_pass:
@@ -304,7 +304,7 @@ class Batcher(object):
                     raise Exception("single_pass mode is off but the example generator is out of data; error.")
 
             # abstract_sentences = [sent.strip() for sent in data.abstract2sents(abstract)] # Use the <s> and </s> tags in abstract to get a list of sentences.
-            example = Example(article, [abstract], self._vocab, self._hps) # Process into an Example.
+            example = Example(q1, [q2], self._vocab, self._hps) # Process into an Example.
             self._example_queue.put(example) # place the Example in the example queue.
 
 
@@ -364,8 +364,8 @@ class Batcher(object):
         while True:
             e = next(example_generator) # e is a tf.Example
             try:
-                article_text = e.features.feature['src'].bytes_list.value[0].decode() # the article text was saved under the key 'article' in the data files
-                abstract_text = e.features.feature['tgt'].bytes_list.value[0].decode() # the abstract text was saved under the key 'abstract' in the data files
+                q1_text = e.features.feature['question1'].bytes_list.value[0].decode() # the question1 text was saved under the key 'question1' in the data files
+                q2_text = e.features.feature['question2'].bytes_list.value[0].decode() # the question2 text was saved under the key 'questions2' in the data files
                 # print('--------------------------------')
                 # print(type(article_text))
                 # print(article_text)
@@ -378,4 +378,4 @@ class Batcher(object):
             if len(article_text)==0: # See https://github.com/abisee/pointer-generator/issues/1
                 tf.logging.warning('Found an example with empty article text. Skipping it.')
             else:
-                yield (article_text, abstract_text)
+                yield (q1_text, q2_text)

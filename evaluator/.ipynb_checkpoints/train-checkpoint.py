@@ -3,7 +3,7 @@
 from __future__ import division, print_function
 
 """
-Script to train the MLP model.
+Script to train an RTE LSTM.
 """
 
 import sys
@@ -12,10 +12,8 @@ import tensorflow as tf
 
 import ioutils
 import utils
-from classifiers import MultiFeedForwardClassifier,\
+from classifiers import LSTMClassifier, MultiFeedForwardClassifier,\
     DecomposableNLIModel
-sys.path.append('/Users/dfirebanks/Projects/DRLParaphrase/generator')
-from parse_data import process_data
 
 
 if __name__ == '__main__':
@@ -27,7 +25,7 @@ if __name__ == '__main__':
                         help='CSV file with validation corpus')
     parser.add_argument('save', help='Directory to save the model files')
     parser.add_argument('model', help='Type of architecture',
-                        choices=['mlp'])
+                        choices=['lstm', 'mlp'])
     parser.add_argument('--vocab', help='Vocabulary file (only needed if numpy'
                                         'embedding file is given)')
     parser.add_argument('-e', dest='num_epochs', default=10, type=int,
@@ -73,10 +71,8 @@ if __name__ == '__main__':
 #     train_pairs = ioutils.read_corpus(args.train, args.lower, args.lang)
 #     valid_pairs = ioutils.read_corpus(args.validation, args.lower, args.lang)
     
-    print(args.train)
-    X_train, y_train, X_val, y_val, X_test, y_test = process_data(args.train)
-    train_pairs = [(qpair[0], qpair[1], label) for qpair, label in zip(X_train, y_train)]
-    valid_pairs = [(qpair[0], qpair[1], label) for qpair, label in zip(X_val, y_val)]
+    
+    
 
     # whether to generate embeddings for unknown, padding, null
     word_dict, embeddings = ioutils.load_embeddings(args.embeddings, args.vocab,
@@ -114,11 +110,11 @@ if __name__ == '__main__':
                                            training=True,
                                            project_input=args.no_project,
                                            optimizer=args.optim)
-    # else:
-    #     model = LSTMClassifier(args.num_units, 3, vocab_size,
-    #                            embedding_size, training=True,
-    #                            project_input=args.no_project,
-    #                            optimizer=args.optim)
+    else:
+        model = LSTMClassifier(args.num_units, 3, vocab_size,
+                               embedding_size, training=True,
+                               project_input=args.no_project,
+                               optimizer=args.optim)
 
     model.initialize(sess, embeddings)
 

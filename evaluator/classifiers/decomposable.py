@@ -17,7 +17,7 @@ def create_msk(bs, sent1, sent2, size1s, size2s):
     msk1 = np.zeros((bs, max_s1))
     msk2 = np.zeros((bs, max_s2))
     for i, (s1, s2, size1, size2) in enumerate(zip(sent1, sent2, size1s, size2s)):
-        msk1[i. :] = [x in s2[:int(size2)] for x in list(s1[:max_s1])]
+        msk1[i, :] = [x in s2[:int(size2)] for x in list(s1[:max_s1])]
         msk2[i, :] = [x in s1[:int(size1)] for x in list(s2[:max_s2])]
 
     msk1 = msk1.astype(int)
@@ -618,8 +618,8 @@ class DecomposableNLIModel(object):
         :return: a tuple (validation_loss, validation_msg)
         """
         loss, acc = session.run([self.loss, self.accuracy], feeds)
-        #msg = 'Validation loss: %f\tValidation accuracy: %f' % (loss, acc)
-        return loss, msg
+        msg = 'Validation loss: %f\tValidation accuracy: %f' % (loss, acc)
+        return loss, msg #, acc # <-- Add this for version of leechihahchiu
 
     def eval(self, session, src_sents, tg_sents, sz1, sz2, debug=False):
         bs = src_sents.shape[0]
@@ -705,19 +705,10 @@ class DecomposableNLIModel(object):
                 batch_index = batch_index2
                 batch_counter += 1
                 if batch_counter % report_interval == 0:
+                    # ORIGINAL CODE -------------------------------
                     avg_loss = accumulated_loss / report_interval
                     accumulated_loss = 0
 
-                    valid_idx = 0
-                    valid_loss = []
-                    valid_acc = []
-
-                    while valid_idx < valid_dataset.num_items-batch_size:
-                        valid_idx2 = valid_idx + batch_size
-                        valid_batch = valid_dataset.get_batch(valid_idx, valid_idx2)
-                        feeds = self._create_batch_feed(valid_batch, 0, 1, l2, 0)
-                        rslts = self._run_on_validation(session, feeds)
-                        valid_loss =
                     feeds = self._create_batch_feed(valid_dataset,
                                                     0, 1, l2, 0)
 
@@ -726,9 +717,7 @@ class DecomposableNLIModel(object):
 
                     msg = '%d completed epochs, %d batches' % (i, batch_counter)
                     msg += '\tAverage training batch loss: %f' % avg_loss
-                    valid_msg = 'Validation loss: %f, \t Validation accuracy: %f' %(np.mean(valid_loss), np.mean(valid_acc))
                     msg += '\t' + valid_msg
-                    valid_loss = np.mean(valid_loss)
 
                     if valid_loss < best_loss:
                         best_loss = valid_loss
@@ -736,6 +725,44 @@ class DecomposableNLIModel(object):
                         msg += '\t(saved model)'
 
                     logger.info(msg)
+
+                    # MODIFIED CODE FROM leechihahchiu ----------------
+                    # avg_loss = accumulated_loss / report_interval
+                    # accumulated_loss = 0
+
+                    # valid_idx = 0
+                    # valid_loss = []
+                    # valid_acc = []
+
+                    # while valid_idx < valid_dataset.num_items-batch_size:
+                    #     valid_idx2 = valid_idx + batch_size
+                    #     valid_batch = valid_dataset.get_batch(valid_idx, valid_idx2)
+                    #     feeds = self._create_batch_feed(valid_batch, 0, 1, l2, 0)
+
+                    #     # Added code
+                    #     v_loss, v_msg, v_acc = self._run_on_validation(session, feeds)
+                    #     valid_loss.append(v_loss)
+                    #     valid_acc.append(v_acc)
+                    #     valid_idx += 1
+                    
+                    # feeds = self._create_batch_feed(valid_dataset,
+                    #                                 0, 1, l2, 0)
+
+                    # # valid_loss, valid_msg = self._run_on_validation(session,
+                    # #                                                 feeds)
+
+                    # msg = '%d completed epochs, %d batches' % (i, batch_counter)
+                    # msg += '\tAverage training batch loss: %f' % avg_loss
+                    # valid_msg = 'Validation loss: %f, \t Validation accuracy: %f' %(np.mean(valid_loss), np.mean(valid_acc))
+                    # msg += '\t' + valid_msg
+                    # valid_loss = np.mean(valid_loss)
+
+                    # if valid_loss < best_loss:
+                    #     best_loss = valid_loss
+                    #     self.save(save_dir, session, saver)
+                    #     msg += '\t(saved model)'
+
+                    # logger.info(msg)
 
 
 
